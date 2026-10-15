@@ -16,7 +16,7 @@
 .toc-item{padding:7px;border-bottom:1px solid #e5e7ea;cursor:pointer}.toc-item:hover{background:#eef5fc}.toc-item.level-2{padding-left:20px}.toc-item.level-3{padding-left:32px}.empty{color:#75808b;font-size:13px;padding:12px 2px}
 
 /* Viewport fully optimized for unrestricted scrolling in all directions at high zoom */
-#viewport{flex:1;min-width:0;min-height:0;width:100%;height:100%;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;cursor:default;touch-action:pan-y;overscroll-behavior:none}
+#viewport{flex:1;min-width:0;min-height:0;width:100%;height:100%;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;cursor:default;touch-action:none;overscroll-behavior:none}
 .book-container{display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-width:0;min-height:0;padding:0;overflow:hidden}
 .book-wrapper{transform-origin:center center;width:100%;height:100%;min-width:0;min-height:0;flex:1 1 auto;position:relative;margin:0;display:flex;align-items:center;justify-content:center}
 #book{width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}
@@ -99,7 +99,9 @@ const loading=document.getElementById('loading');
 const viewport=document.getElementById('viewport');
 const wrapper=document.getElementById('book-wrapper');
 const flipAudio=document.getElementById('flipSound');
-let pageFlip=null,currentZoom=1,isDragging=false,dragStartX=0,dragStartY=0,startScrollLeft=0,startScrollTop=0,currentPage=1,autoFit=true,lastSound=0;
+let pageFlip=null,currentZoom=1,isDragging=false,dragStartX=0,dragStartY=0,panX=0,panY=0,dragStartPanX=0,dragStartPanY=0,currentPage=1,autoFit=true,lastSound=0;
+let pinchStartDistance=0,pinchStartZoom=1,pinchStartPanX=0,pinchStartPanY=0;
+const activePointers=new Map();
 
 function playFlip(){
   if(!flipAudio)return;
@@ -118,15 +120,32 @@ function playFlip(){
 }
 
 function updateTransform(){
-  wrapper.style.transform=`scale(${currentZoom})`;
+  wrapper.style.transform=`translate(${panX}px,${panY}px) scale(${currentZoom})`;
   document.getElementById('zoom-label').textContent=Math.round(currentZoom*100)+'%';
+  viewport.style.cursor=currentZoom>1.01?'grab':'default';
 }
-function center(){ /* Responsive layout centers the book without scrollbars. */ }
-function setZoom(z){
-  currentZoom=Math.max(.55,Math.min(3,z));
+function center(){
+  panX=0;panY=0;updateTransform();
+}
+function setZoom(z, focusX=null, focusY=null){
+  const next=Math.max(.55,Math.min(3,z));
+  if(focusX!==null && focusY!==null){
+    const rect=viewport.getBoundingClientRect();
+    const x=focusX-rect.left-rect.width/2;
+    const y=focusY-rect.top-rect.height/2;
+    const ratio=next/currentZoom;
+    panX=x-(x-panX)*ratio;
+    panY=y-(y-panY)*ratio;
+  }
+  currentZoom=next;
+  if(currentZoom<=1){panX=0;panY=0;}
   updateTransform();
 }
 function userZoom(z){autoFit=false;setZoom(z);}
+function zoomAtPointer(z,e){
+  autoFit=false;
+  if(e) setZoom(z,e.clientX,e.clientY); else setZoom(z);
+}
 function showStatus(t){const s=document.getElementById('status');s.textContent=t;s.style.display='block';clearTimeout(window._st);window._st=setTimeout(()=>s.style.display='none',3000)}
 function goToPage(n){
   n=Math.max(1,Math.min(TOTAL,parseInt(n)||1));
@@ -134,12 +153,56 @@ function goToPage(n){
 }
 function renderFallbackPage(){pages.forEach((p,i)=>p.style.display=(i===currentPage-1?'block':'none'));document.getElementById('current-page').textContent=currentPage}
 function fitScreen(){
-  currentZoom=1;
+  currentZoom=1;panX=0;panY=0;
   updateTransform();
   autoFit=true;
   if(pageFlip){try{pageFlip.update()}catch(_){}}
 }
 function fitWidth(){fitScreen();}
+function pointerDistance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+viewport.addEventListener('pointerdown',e=>{
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(activePointers.size===2){
+    const pts=[...activePointers.values()];
+    pinchStartDistance=pointerDistance(pts[0],pts[1]);
+    pinchStartZoom=currentZoom;pinchStartPanX=panX;pinchStartPanY=panY;
+    autoFit=false;
+    return;
+  }
+  if(currentZoom>1.01 && activePointers.size===1){
+    isDragging=true;dragStartX=e.clientX;dragStartY=e.clientY;
+    dragStartPanX=panX;dragStartPanY=panY;
+    viewport.style.cursor='grabbing';
+    try{viewport.setPointerCapture(e.pointerId)}catch(_){}
+  }
+});
+viewport.addEventListener('pointermove',e=>{
+  if(!activePointers.has(e.pointerId))return;
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(activePointers.size===2 && pinchStartDistance>0){
+    const pts=[...activePointers.values()];
+    const midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2;
+    const ratio=pointerDistance(pts[0],pts[1])/pinchStartDistance;
+    setZoom(pinchStartZoom*ratio,midX,midY);
+    e.preventDefault();
+  }else if(isDragging && currentZoom>1.01){
+    panX=dragStartPanX+(e.clientX-dragStartX);
+    panY=dragStartPanY+(e.clientY-dragStartY);
+    updateTransform();e.preventDefault();
+  }
+},{passive:false});
+function endPointer(e){
+  activePointers.delete(e.pointerId);
+  if(activePointers.size<2)pinchStartDistance=0;
+  if(activePointers.size===0){isDragging=false;updateTransform();}
+}
+viewport.addEventListener('pointerup',endPointer);
+viewport.addEventListener('pointercancel',endPointer);
+viewport.addEventListener('lostpointercapture',endPointer);
+viewport.addEventListener('wheel',e=>{
+  if(e.ctrlKey){e.preventDefault();zoomAtPointer(currentZoom+(e.deltaY<0?.1:-.1),e);}
+  else if(currentZoom>1.01){panX-=e.deltaX;panY-=e.deltaY;updateTransform();e.preventDefault();}
+},{passive:false});
 
 function initBook(){
   try{
