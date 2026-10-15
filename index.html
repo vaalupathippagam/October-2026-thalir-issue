@@ -7,7 +7,7 @@
 <script src="page-flip.browser.min.js"></script>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;font-family:Segoe UI,Arial,sans-serif;background:#F4F1EA;color:#17212b}button,input{font:inherit}button{cursor:pointer}
-#app{height:100%;display:flex;flex-direction:column}.topbar{height:52px;flex:0 0 52px;background:#10253d;color:white;display:flex;align-items:center;padding:0 14px;gap:14px}.brand{font-weight:800;font-size:18px;letter-spacing:.4px;color:#FFD54A}.booktitle{opacity:.82;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.top-actions{margin-left:auto;display:flex;gap:6px}.top-actions button,.toolbar button{border:0;border-radius:7px;padding:7px 10px;background:#26384a;color:white}.top-actions button:hover,.toolbar button:hover{background:#385067}
+#app{height:100dvh;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}.topbar{height:52px;flex:0 0 52px;background:#10253d;color:white;display:flex;align-items:center;padding:0 14px;gap:14px}.brand{font-weight:800;font-size:18px;letter-spacing:.4px;color:#FFD54A}.booktitle{opacity:.82;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.top-actions{margin-left:auto;display:flex;gap:6px}.top-actions button,.toolbar button{border:0;border-radius:7px;padding:7px 10px;background:#26384a;color:white}.top-actions button:hover,.toolbar button:hover{background:#385067}
 .main{min-height:0;flex:1;display:flex;position:relative}
 
 .sidebar{width:300px;flex:0 0 300px;background:rgba(255,255,255,.96);border-right:1px solid #ccd3da;display:flex;flex-direction:column;z-index:20}
@@ -16,12 +16,16 @@
 .toc-item{padding:7px;border-bottom:1px solid #e5e7ea;cursor:pointer}.toc-item:hover{background:#eef5fc}.toc-item.level-2{padding-left:20px}.toc-item.level-3{padding-left:32px}.empty{color:#75808b;font-size:13px;padding:12px 2px}
 
 /* Viewport fully optimized for unrestricted scrolling in all directions at high zoom */
-#viewport{flex:1;min-width:0;min-height:0;overflow:auto;position:relative;cursor:grab;touch-action:pan-x pan-y;overscroll-behavior:none}
-#viewport:active{cursor:grabbing}
-
-.book-container{display:inline-flex;align-items:center;justify-content:center;min-width:100%;min-height:100%;padding:300px}
-.book-wrapper{transform-origin:center center;width:600px;height:848px;flex:0 0 auto;position:relative;margin:auto}
-#book{width:100%;height:100%}
+#viewport{flex:1;min-width:0;min-height:0;width:100%;height:100%;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;cursor:default;touch-action:pan-y;overscroll-behavior:none}
+.book-container{display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-width:0;min-height:0;padding:0;overflow:hidden}
+.book-wrapper{transform-origin:center center;width:100%;height:100%;min-width:0;min-height:0;flex:1 1 auto;position:relative;margin:0;display:flex;align-items:center;justify-content:center}
+#book{width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+#book .page{touch-action:none;user-select:none;-webkit-user-select:none}
+#book .bg-img{touch-action:none;user-select:none;-webkit-user-select:none}
+body.reader-fullscreen{overflow:hidden!important}
+body.reader-fullscreen #app{position:fixed;inset:0;width:100vw;height:100dvh;z-index:99999;background:#F4F1EA}
+body.reader-fullscreen .main{min-height:0}
+@media (orientation:landscape) and (max-height:520px){.topbar{height:36px;flex-basis:36px}.bottombar{height:auto;min-height:44px;flex-basis:44px}.toolbar button{padding:4px 6px}.brand{font-size:14px}}
 .stf__outerShadow,.stf__innerShadow,.stf__hardShadow,.stf__hardInnerShadow{display:none!important}
 .page{background:white;overflow:hidden;position:relative}.bg-img{width:100%;height:100%;object-fit:fill;display:block;pointer-events:none;-webkit-user-drag:none}.watermark-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-size:34px;font-weight:700;color:rgba(120,120,120,.28);white-space:nowrap;pointer-events:none}.watermark-img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);max-width:55%;max-height:55%;opacity:.2;pointer-events:none}
 
@@ -37,7 +41,8 @@
 .status{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(20,32,44,.82);color:white;padding:6px 10px;border-radius:16px;font-size:12px;display:none;z-index:50}
 #loading{position:fixed;inset:0;background:rgba(12,20,28,.94);z-index:10000;color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}.spinner{width:42px;height:42px;border:4px solid #65717d;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 #password-overlay{position:fixed;inset:0;background:#F4F1EA;z-index:11000;display:flex;align-items:center;justify-content:center}.pwd-box{background:white;width:min(390px,90vw);padding:30px;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.35);text-align:center}.brand-small{font-weight:800;color:#1d6fd1;letter-spacing:1px}.pwd-box h2{margin:8px 0}.pwd-row{display:flex;gap:6px}.pwd-row input{flex:1;padding:11px;border:1px solid #bbb;border-radius:7px}.pwd-row button{width:45px;border:1px solid #bbb;border-radius:7px;background:#eee}.primary{width:100%;margin-top:12px;padding:11px;border:0;border-radius:7px;background:#1d6fd1;color:white;font-weight:700}.pwd-box #pwd-error{display:none;color:#c62828;margin-top:10px;font-weight:700}
-@media(max-width:800px){.sidebar,.bottom-left-spacer{display:none}.topbar{height:46px;flex-basis:46px}.brand{font-size:15px}.booktitle{font-size:12px}.bottombar{min-height:54px;flex-basis:54px}.toolbar{gap:3px}.toolbar button{padding:6px 8px}.page-count{min-width:70px}}
+@media(max-width:800px){.sidebar,.bottom-left-spacer{display:none}.topbar{height:42px;flex-basis:42px;padding:0 8px;gap:8px}.brand{font-size:13px}.booktitle{font-size:11px}.bottombar{min-height:48px;flex-basis:48px}.toolbar{gap:2px;padding:0 3px;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start}.toolbar button{flex:0 0 auto;padding:5px 7px;min-width:30px}.page-count{min-width:52px;font-size:12px}.goto{width:42px;padding:5px 2px}.zoom-label{min-width:34px;font-size:11px}}
+@media(max-width:420px){.brand{font-size:11px}.booktitle{font-size:10px}.top-actions button{padding:5px 7px}.toolbar button#fit-width,.toolbar button#actual,.toolbar button#center,.toolbar button#pan-left,.toolbar button#pan-up,.toolbar button#pan-down,.toolbar button#pan-right{display:none}}
 </style>
 </head>
 <body>
@@ -116,45 +121,35 @@ function updateTransform(){
   wrapper.style.transform=`scale(${currentZoom})`;
   document.getElementById('zoom-label').textContent=Math.round(currentZoom*100)+'%';
 }
-function center(){
-  viewport.scrollLeft=(viewport.scrollWidth-viewport.clientWidth)/2;
-  viewport.scrollTop=(viewport.scrollHeight-viewport.clientHeight)/2;
-}
+function center(){ /* Responsive layout centers the book without scrollbars. */ }
 function setZoom(z){
-  currentZoom=Math.max(.4,Math.min(4,z));
+  currentZoom=Math.max(.55,Math.min(3,z));
   updateTransform();
 }
-function userZoom(z){autoFit=false;setZoom(z);center();}
-function showStatus(t){const s=document.getElementById('status');s.textContent=t;s.style.display='block';clearTimeout(window._st);window._st=setTimeout(()=>s.style.display='none',2500)}
+function userZoom(z){autoFit=false;setZoom(z);}
+function showStatus(t){const s=document.getElementById('status');s.textContent=t;s.style.display='block';clearTimeout(window._st);window._st=setTimeout(()=>s.style.display='none',3000)}
 function goToPage(n){
   n=Math.max(1,Math.min(TOTAL,parseInt(n)||1));
   if(pageFlip){pageFlip.flip(n-1)}else{currentPage=n;renderFallbackPage();playFlip()}
 }
 function renderFallbackPage(){pages.forEach((p,i)=>p.style.display=(i===currentPage-1?'block':'none'));document.getElementById('current-page').textContent=currentPage}
 function fitScreen(){
-  const container=document.querySelector('.book-container');
-  const r=Math.min((viewport.clientWidth-80)/wrapper.offsetWidth,(viewport.clientHeight-80)/wrapper.offsetHeight);
-  currentZoom=Math.max(.4,Math.min(4,r));
+  currentZoom=1;
   updateTransform();
-  center();
   autoFit=true;
+  if(pageFlip){try{pageFlip.update()}catch(_){}}
 }
-function fitWidth(){
-  currentZoom=Math.max(.4,Math.min(4,(viewport.clientWidth-80)/wrapper.offsetWidth));
-  updateTransform();
-  center();
-  autoFit=false;
-}
+function fitWidth(){fitScreen();}
 
 function initBook(){
   try{
     if(window.St && St.PageFlip){
       pageFlip=new St.PageFlip(document.getElementById('book'),{
         width:PW,height:PH,size:'stretch',
-        minWidth:Math.round(PW*.9),maxWidth:Math.round(PW*1.1),
-        minHeight:Math.round(PH*.9),maxHeight:Math.round(PH*1.1),
+        minWidth:Math.round(PW*.45),maxWidth:PW*2,
+        minHeight:Math.round(PH*.45),maxHeight:PH*1.5,
         showCover:true,usePortrait:true,drawShadow:false,maxShadowOpacity:0,
-        mobileScrollSupport:false,flippingTime:600,autoSize:true
+        mobileScrollSupport:true,flippingTime:600,autoSize:true
       });
       pageFlip.loadFromHTML(pages);
       pageFlip.on('flip',e=>{currentPage=e.data+1;document.getElementById('current-page').textContent=currentPage;playFlip();});
@@ -167,7 +162,28 @@ function buildThumbnails(){const box=document.getElementById('thumb-grid');box.i
 function buildTOC(){const box=document.getElementById('toc-list');box.innerHTML='';if(!TOC.length){box.innerHTML='<div class="empty">PDF உள்ளடக்கப் பட்டியல் இல்லை.</div>';return}TOC.forEach(x=>{const d=document.createElement('div');d.className='toc-item level-'+Math.min(3,x.level);d.textContent=x.title;d.onclick=()=>goToPage(x.page);box.appendChild(d)})}
 function doSearch(){const q=document.getElementById('search-input').value.trim().toLowerCase();const box=document.getElementById('search-results');box.innerHTML='';if(!q){return}let count=0;SEARCH_INDEX.forEach(item=>{const idx=item.text.toLowerCase().indexOf(q);if(idx>=0 && count<50){const d=document.createElement('div');d.className='result';const start=Math.max(0,idx-55),end=Math.min(item.text.length,idx+110);const snippet=document.createElement('small');snippet.textContent=item.text.slice(start,end)+(end<item.text.length?'…':'');const t=document.createElement('strong');t.textContent='Page '+item.page;d.appendChild(t);d.appendChild(snippet);d.onclick=()=>goToPage(item.page);box.appendChild(d);count++}});if(!count)box.innerHTML='<div class="empty">தேடல் முடிவு இல்லை.</div>'}
 function setupTabs(){[['search','tab-search','panel-search'],['pages','tab-pages','panel-pages'],['toc','tab-toc','panel-toc']].forEach(x=>{document.getElementById(x[1]).onclick=()=>{document.querySelectorAll('.side-tabs button').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById(x[1]).classList.add('active');document.getElementById(x[2]).classList.add('active')}})}
-function toggleFullscreen(){if(!document.fullscreenElement){document.documentElement.requestFullscreen?.()}else{document.exitFullscreen?.()}}
+async function toggleFullscreen(){
+  if(document.fullscreenElement){
+    try{await document.exitFullscreen();}catch(_){}
+    document.body.classList.remove('reader-fullscreen');
+    fitScreen();
+    return;
+  }
+  try{
+    if(document.documentElement.requestFullscreen){
+      await document.documentElement.requestFullscreen();
+      document.body.classList.remove('reader-fullscreen');
+    }else{
+      document.body.classList.add('reader-fullscreen');
+    }
+  }catch(err){
+    /* Embedded Blogger frames may deny browser fullscreen; expand the reader to its frame. */
+    document.body.classList.toggle('reader-fullscreen');
+    showStatus(document.body.classList.contains('reader-fullscreen')?'வாசிப்பு திரை விரிவாக்கப்பட்டது. முழு Browser திரைக்கு Blogger embed-ல் allowfullscreen தேவை.':'வழக்கமான திரை');
+  }
+  setTimeout(fitScreen,100);
+}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.body.classList.remove('reader-fullscreen');setTimeout(()=>{if(autoFit)fitScreen()},100)});
 
 document.getElementById('first').onclick=()=>goToPage(1);
 document.getElementById('prev').onclick=()=>goToPage(currentPage-1);
@@ -192,6 +208,8 @@ document.getElementById('help-btn').onclick=()=>alert('விசைப்பல�
 document.getElementById('search-btn').onclick=doSearch;
 document.getElementById('search-input').onkeydown=e=>{if(e.key==='Enter')doSearch()};
 
+document.getElementById('book').addEventListener('contextmenu',e=>e.preventDefault());
+document.getElementById('book').addEventListener('dragstart',e=>e.preventDefault());
 viewport.addEventListener('mousedown',e=>{
   if(e.button!==0)return;
   isDragging=true;
@@ -230,6 +248,7 @@ window.addEventListener('keydown',e=>{
   else if(e.key==='Escape'&&document.fullscreenElement)document.exitFullscreen();
 });
 window.addEventListener('resize',()=>{if(autoFit)fitScreen();});
+window.addEventListener('orientationchange',()=>setTimeout(()=>{if(autoFit)fitScreen()},250));
 setupTabs();
 async function sha256(s){const b=new TextEncoder().encode(s);const h=await crypto.subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function checkPassword(){if(!PASSWORD_HASH)return true;const input=document.getElementById('book-pwd-input').value;if(await sha256(input)===PASSWORD_HASH){document.getElementById('password-overlay').style.display='none';return true}document.getElementById('pwd-error').style.display='block';return false}
